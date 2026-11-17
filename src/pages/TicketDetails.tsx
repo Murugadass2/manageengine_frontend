@@ -211,9 +211,13 @@ export const TicketDetails: React.FC = () => {
     );
   }
 
-  const isAssignedTechnician = role === 'TECHNICIAN' && user?.id === ticket.assignedTechnicianId;
+  const isDepartmentTeamMember =
+    role === 'TECHNICIAN' ||
+    (role === 'EMPLOYEE' && user?.departmentId === ticket.departmentId);
+  const isAssignedTeamMember =
+    isDepartmentTeamMember && user?.id === ticket.assignedTechnicianId;
   const canAcceptTicket =
-    role === 'TECHNICIAN' &&
+    isDepartmentTeamMember &&
     user?.departmentId === ticket.departmentId &&
     (!ticket.assignedTechnicianId || ticket.assignedTechnicianId === user.id) &&
     ['NEW', 'OPEN', 'ASSIGNED'].includes(ticket.status);
@@ -253,7 +257,7 @@ export const TicketDetails: React.FC = () => {
               <span>Accept Ticket</span>
             </button>
           )}
-          {isAssignedTechnician && ticket.status === 'ASSIGNED' && (
+          {isAssignedTeamMember && ticket.status === 'ASSIGNED' && (
               <button
                 onClick={() => handleAssignmentAction('REJECT')}
                 className="px-3.5 py-1.5 bg-slate-100 hover:bg-rose-50 text-rose-600 border border-slate-300 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
@@ -264,7 +268,7 @@ export const TicketDetails: React.FC = () => {
           )}
 
           {/* In Progress */}
-          {isAssignedTechnician && ticket.status === 'ACCEPTED' && (
+          {isAssignedTeamMember && ticket.status === 'ACCEPTED' && (
             <button
               onClick={() => handleStatusChange('IN_PROGRESS')}
               className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-navy-950 text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
@@ -275,7 +279,7 @@ export const TicketDetails: React.FC = () => {
           )}
 
           {/* Log Work */}
-          {isAssignedTechnician && ticket.status === 'IN_PROGRESS' && (
+          {isAssignedTeamMember && ticket.status === 'IN_PROGRESS' && (
             <button
               onClick={() => setShowWorkLogModal(true)}
               className="px-3.5 py-1.5 bg-navy-900 hover:bg-navy-800 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5"
@@ -286,7 +290,7 @@ export const TicketDetails: React.FC = () => {
           )}
 
           {/* Mark Resolved */}
-          {isAssignedTechnician && ticket.status === 'IN_PROGRESS' && (
+          {isAssignedTeamMember && ticket.status === 'IN_PROGRESS' && (
             <button
               onClick={() => setShowResolveModal(true)}
               className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
@@ -620,7 +624,7 @@ export const TicketDetails: React.FC = () => {
                 <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Technician Labor & Work Logs
                 </span>
-                {role !== 'EMPLOYEE' && (
+                {isAssignedTeamMember && (
                   <button
                     onClick={() => setShowWorkLogModal(true)}
                     className="px-3 py-1.5 bg-navy-900 text-gold-400 font-bold text-xs rounded-lg hover:bg-navy-800 transition-colors"

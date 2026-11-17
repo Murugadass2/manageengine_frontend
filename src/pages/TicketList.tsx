@@ -28,7 +28,11 @@ export const TicketList: React.FC<TicketListProps> = ({
 }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
+  const hasDepartmentInbox =
+    ['TECHNICIAN', 'DEPT_MANAGER'].includes(role) ||
+    (role === 'EMPLOYEE' && Boolean(user?.departmentId));
+  const employeeDepartmentQueue = myTasksOnly && role === 'EMPLOYEE' && Boolean(user?.departmentId);
 
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -85,13 +89,21 @@ export const TicketList: React.FC<TicketListProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-serif font-bold text-navy-950 tracking-wide">
-            {myTasksOnly ? 'My Assigned Tasks' : role === 'TECHNICIAN' ? 'Department Ticket Queue' : 'All Service Tickets'}
+            {myTasksOnly
+              ? employeeDepartmentQueue
+                ? `${user?.department?.name || 'Department'} Ticket Queue`
+                : 'My Assigned Tasks'
+              : hasDepartmentInbox
+              ? `${user?.department?.name || 'Department'} Ticket Queue`
+              : 'All Service Tickets'}
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             {myTasksOnly
-              ? 'Work orders currently dispatched to your technician queue'
-              : role === 'TECHNICIAN'
-              ? 'Unclaimed and assigned tickets for your department'
+              ? employeeDepartmentQueue
+                ? `Tickets submitted to ${user?.department?.name || 'your department'}`
+                : 'Work orders currently dispatched to your technician queue'
+              : hasDepartmentInbox
+              ? `Tickets submitted to ${user?.department?.name || 'your department'}`
               : `Managing hotel-wide incidents and service requests (${total} total tickets)`}
           </p>
         </div>
@@ -168,7 +180,7 @@ export const TicketList: React.FC<TicketListProps> = ({
             <option value="LOW">Low</option>
           </select>
 
-          {role !== 'TECHNICIAN' && (
+          {!hasDepartmentInbox && (
             <select
               value={departmentFilter}
               onChange={(e) => {

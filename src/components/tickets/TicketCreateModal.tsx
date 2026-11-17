@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ticketsApi, departmentsApi, assetsApi, kbApi } from '../../services/api';
 import { Department, Asset, KnowledgeArticle } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 import { X, Sparkles, AlertCircle, Check, BookOpen } from 'lucide-react';
 
 interface TicketCreateModalProps {
@@ -14,6 +15,7 @@ export const TicketCreateModal: React.FC<TicketCreateModalProps> = ({
   onClose,
   onTicketCreated,
 }) => {
+  const { user, role } = useAuth();
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [departmentId, setDepartmentId] = useState('');
@@ -60,9 +62,12 @@ export const TicketCreateModal: React.FC<TicketCreateModalProps> = ({
       setDepartments(deptData);
       setAssets(assetData);
       if (deptData.length > 0 && !departmentId) {
-        // Default to Maintenance or IT
-        const maint = deptData.find((d: any) => d.code === 'MAINT') || deptData[0];
-        setDepartmentId(maint.id);
+        const userDepartment = ['DEPT_MANAGER', 'TECHNICIAN'].includes(role)
+          ? deptData.find((department) => department.id === user?.departmentId)
+          : undefined;
+        const defaultDepartment =
+          userDepartment || deptData.find((department) => department.code === 'MAINT') || deptData[0];
+        setDepartmentId(defaultDepartment.id);
       }
     } catch (e) {
       console.error(e);
